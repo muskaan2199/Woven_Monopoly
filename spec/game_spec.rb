@@ -47,9 +47,40 @@ RSpec.describe Game do
     game.play
   end
 
-  it "fetches board space after moving" do
-    expect(game.instance_variable_get(:@board)).to receive(:get_space).at_least(:once)
-    game.play
+  it "doubles the rent if the player owns the full set of properties" do
+    player = double("Player", name: "Peter")
+    property_position = 1
+    property_space = { type: "property", price: 5, colour: "Red" }
+    allow(game.instance_variable_get(:@board)).to receive(:get_space).with(property_position).and_return(property_space)
+    allow(game.instance_variable_get(:@board)).to receive(:owns_full_set?).with(player, "Red").and_return(true)
+    rent = game.send(:calculate_rent, property_position, player)
+    expect(rent).to eq(10)  
   end
-  
+
+  it "calls buy_property" do
+    player = double("Player", name: "Peter", money: 10)
+    owner = double("Player", name: "Billy", money: 20) 
+    property_position = 1
+    property_space = { type: "property", price: 5, colour: "Red" }
+    allow(game.instance_variable_get(:@board)).to receive(:get_space).with(property_position).and_return(property_space)
+    allow(game.instance_variable_get(:@board)).to receive(:owner_of).with(property_position).and_return(nil)
+    expect(game.instance_variable_get(:@board)).to receive(:buy_property).with(player, property_position)
+    game.send(:handle_property_landing, player, property_position)
+  end
+
+  it "calls calculate_rent and player pays rent" do
+    player = double("Player", name: "Peter", money: 10)
+    owner = double("Player", name: "Billy", money: 20) 
+    property_position = 1
+    property_space = { type: "property", price: 5, colour: "Red" }
+    allow(game.instance_variable_get(:@board)).to receive(:get_space).with(property_position).and_return(property_space)
+    allow(game.instance_variable_get(:@board)).to receive(:owner_of).with(property_position).and_return(owner)
+    allow(game).to receive(:calculate_rent).with(property_position, owner).and_return(5)
+    allow(player).to receive(:pay_rent).with(5)
+    allow(owner).to receive(:money=) 
+    expect(game).to receive(:calculate_rent).with(property_position, owner)
+    expect(player).to receive(:pay_rent).with(5)
+    game.send(:handle_property_landing, player, property_position)
+  end
+
 end
