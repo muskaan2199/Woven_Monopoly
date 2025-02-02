@@ -18,9 +18,13 @@ class Game
       space = @board.get_space(current_player.position)
       if space[:type] == "property"
         handle_property_landing(current_player, current_player.position)
+      elsif space[:type] == "go"
+        current_player.money += 1
       end
+      break if game_over?
       @current_turn = (@current_turn + 1) % @players.size
     end
+    declare_winner
   end
   private
   def handle_property_landing(player, position)
@@ -40,5 +44,17 @@ class Game
     @board.owns_full_set?(owner, space[:colour]) ? base_rent * 2 : base_rent
   end
 
+  def game_over?
+    @players.any?(&:bankrupt?)
+  end
 
+  def declare_winner
+    winner = @players.max_by { |player| [player.money, player.properties.size] }
+
+    puts "✨ The winner is #{winner.name} with $#{winner.money} and #{winner.properties.size} properties!"
+  
+    @players.each do |p|
+      puts "➡️  #{p.name} finished with $#{p.money} at position #{p.position}, owning #{p.properties.size} properties."
+    end
+  end
 end
