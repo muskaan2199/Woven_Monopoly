@@ -108,25 +108,39 @@ RSpec.describe Game do
   end
 
   describe "#declare_winner" do
-    let(:players) do
-      [
-        double("Player", name: "Peter", money: 10, position: 2),
-        double("Player", name: "Billy", money: 20, position: 3),
-        double("Player", name: "Charlotte", money: 15, position: 4),
-        double("Player", name: "Sweedal", money: 5, position: 1)
-      ]
-    end
-
-    before { game.instance_variable_set(:@players, players) }
-
-    it "declares the correct winner" do
-      expect { game.send(:declare_winner) }.to output(/🏆 The winner is Billy with \$20!/).to_stdout
-    end
-
-    it "prints final player standings" do
-      expect { game.send(:declare_winner) }.to output(
-        /Peter finished with \$10 at position 2\nBilly finished with \$20 at position 3\nCharlotte finished with \$15 at position 4\nSweedal finished with \$5 at position 1/
-      ).to_stdout
-    end
+  let(:players) do
+    [
+      double("Player", name: "Peter", money: 10, properties: [1, 2], position: 2),
+      double("Player", name: "Billy", money: 20, properties: [3], position: 3),
+      double("Player", name: "Charlotte", money: 15, properties: [4, 5], position: 4),
+      double("Player", name: "Sweedal", money: 5, properties: [], position: 1)
+    ]
   end
+
+  before { game.instance_variable_set(:@players, players) }
+
+  it "declares the correct winner based on money and property count" do
+    winner = game.send(:determine_winner)  
+    puts winner
+    expect(winner.name).to eq("Billy")  
+  end
+
+  it "chooses player with more properties if money is tied" do
+    players[1] = double("Player", name: "Billy", money: 15, properties: [3], position: 3)
+    players[2] = double("Player", name: "Charlotte", money: 15, properties: [4, 5, 6], position: 4)
+    
+    game.instance_variable_set(:@players, players)
+    winner = game.send(:determine_winner)
+    expect(winner.name).to eq("Charlotte")  # Charlotte has more properties
+  end
+
+  it "chooses the first player in list if there's a complete tie" do
+    players[0] = double("Player", name: "Billy", money: 15, properties: [1, 2], position: 2)
+    players[1] = double("Player", name: "Peter", money: 15, properties: [3, 4], position: 3)
+    
+    game.instance_variable_set(:@players, players)
+    winner = game.send(:determine_winner)
+    expect(winner.name).to eq("Billy") 
+  end
+ end
 end

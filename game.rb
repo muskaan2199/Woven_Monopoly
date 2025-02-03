@@ -24,7 +24,7 @@ class Game
       break if game_over?
       @current_turn = (@current_turn + 1) % @players.size
     end
-    declare_winner
+    print_winner
   end
   private
   def handle_property_landing(player, position)
@@ -48,13 +48,16 @@ class Game
     @players.any?(&:bankrupt?)
   end
 
-  def declare_winner
-    winner = @players.max_by { |player| [player.money, player.properties.size] }
+  def determine_winner
+  @players.max_by { |player| [player.money, player.properties.size] }
+  end
 
-    puts "✨ The winner is #{winner.name} with $#{winner.money} and #{winner.properties.size} properties!"
+  def print_winner
+    winner = determine_winner
+    puts "✨ The winner is #{winner.name} with $#{winner.money}"
   
     @players.each do |p|
-      puts "➡️  #{p.name} finished with $#{p.money} at position #{p.position}, owning #{p.properties.size} properties."
+      puts "➡️  #{p.name} finished with $#{p.money} at position #{p.position}."
     end
   end
 end
